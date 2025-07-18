@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+        .chat-container {
+            width: 400px;
+            margin: 100px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .messages {
+            height: 300px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+        }
+        .input-message, .input-username {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h2>Real-Time Chat</h2>
+        <div id="username-section">
+            <input type="text" id="username-input" class="input-username" placeholder="Enter your name" />
+            <button onclick="setUsername()">Join Chat</button>
+        </div>
+        <div id="chat-section" style="display: none;">
+            <div id="messages" class="messages"></div>
+            <input type="text" id="message-input" class="input-message" placeholder="Type a message..." />
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        var username = "";
+
+        function setUsername() {
+            username = document.getElementById('username-input').value;
+            if (username) {
+                socket.emit('set_username', username);
+                document.getElementById('username-section').style.display = 'none';
+                document.getElementById('chat-section').style.display = 'block';
+            }
+        }
+
+        document.getElementById('message-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                var message = e.target.value;
+                socket.send({ 'message': message });
+                e.target.value = '';
+            }
+        });
+
+        socket.on('message', function(data) {
+            var messageDiv = document.createElement('div');
+            messageDiv.textContent = data.user + ": " + data.message;
+            document.getElementById('messages').appendChild(messageDiv);
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        });
+    </script>
+</body>
+</html>
